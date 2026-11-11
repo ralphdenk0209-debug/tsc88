@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <rect width="512" height="512" fill="#0e2a47"/>
+  <g transform="translate(256 228)">
+    <circle r="150" fill="#1d4670"/>
+    <circle r="112" fill="#0e2a47"/>
+    <circle r="74" fill="#1d4670"/>
+    <circle r="36" fill="#0e2a47"/>
+    <!-- Eisstock von der Seite -->
+    <ellipse cx="0" cy="34" rx="92" ry="22" fill="#c8372d"/>
+    <rect x="-92" y="-6" width="184" height="40" fill="#c8372d"/>
+    <ellipse cx="0" cy="-6" rx="92" ry="22" fill="#e04a3f"/>
+    <rect x="-10" y="-92" width="20" height="86" rx="8" fill="#f3efe8"/>
+    <rect x="-34" y="-112" width="68" height="28" rx="14" fill="#f3efe8"/>
+  </g>
+  <text x="256" y="452" fill="#ffffff" font-family="Helvetica, Arial, sans-serif" font-size="92" font-weight="800" text-anchor="middle" letter-spacing="-2">TSC88</text>
+</svg>
