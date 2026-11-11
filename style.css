@@ -172,7 +172,7 @@ main { max-width: 720px; margin: 0 auto; padding: 16px 16px calc(96px + var(--un
 .zielfeld .zielstock-griff { fill: #fff; }
 .zielfeld .zielstock-text { fill: #fff; font-size: 14px; font-weight: 800; text-anchor: middle; dominant-baseline: central; }
 .zielfeld .daube { fill: #1b1b1b; }
-.zielfeld .richtung { fill: var(--navy); font-size: 15px; text-anchor: middle; font-weight: 600; }
+.zielfeld .richtung { fill: var(--navy); font-size: 15px; font-weight: 600; }
 .zielfeld .pfeil { stroke: var(--navy); stroke-width: 2.5; fill: none; }
 .zielfeld .pfeilspitze { fill: var(--navy); }
 
@@ -290,3 +290,18 @@ main { max-width: 720px; margin: 0 auto; padding: 16px 16px calc(96px + var(--un
   .zelle { height: 36px; font-size: .92rem; }
   .plaetze { grid-template-columns: 1fr; }
 }
+
+/* ---------- Zielfeld: Positionen, Wege, Drehen ---------- */
+.zielfeld .stockpos circle { fill: #fff; stroke: var(--navy-2); stroke-width: 1.8; }
+.zielfeld .stockpos text { fill: var(--navy-2); font-size: 16px; font-weight: 800; text-anchor: middle; dominant-baseline: central; }
+.zielfeld .stockpos.fertig { opacity: .4; }
+.zielfeld .weg-eigen { stroke: var(--navy); stroke-width: 3.5; stroke-dasharray: 11 7; stroke-linecap: round; fill: none; }
+.zielfeld .weg-ziel { stroke: var(--rot); stroke-width: 3.5; stroke-dasharray: 11 7; stroke-linecap: round; fill: none; }
+.zielfeld .spitze-eigen { fill: var(--navy); }
+.zielfeld .spitze-ziel { fill: var(--rot); }
+.zielfeld .zielstock-text { font-size: 16px; }
+.feld-werkzeug { display: flex; justify-content: flex-end; margin: 6px 0 -4px; }
+.feld-werkzeug .knopf { min-height: 36px; font-size: .9rem; }
+.legende { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: .82rem; color: var(--text-2); margin: 4px 0 0; }
+.legende span { display: inline-block; width: 22px; height: 0; border-top: 3px dashed var(--navy); margin-left: 8px; }
+.legende span.l-ziel { border-top-color: var(--rot); }

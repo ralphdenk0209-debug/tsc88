@@ -15,6 +15,7 @@ const S = {
   token: LS.get('tsc88_token'),
   ich: Number(LS.get('tsc88_ich')) || null,
   tab: LS.get('tsc88_tab') || 'training',
+  gedreht: LS.get('tsc88_gedreht') === '1',
   daten: null,
   stand: null,
   offline: false,
@@ -183,77 +184,136 @@ const DURCHGAENGE = [
   { nr: 4, name: 'Kombinieren', kurz: 'Ablenken und Bringen mit dem Zielstock.' }
 ];
 
-// Jeder der 24 Versuche: was zu tun ist und wie das Zielfeld aussieht
+// Reihenfolge der Zielstock-Positionen je Durchgang (in der App als Nummer 1–6 angezeigt)
+const REIHENFOLGE = { 2: ['A', 'B', 'C', 'D', 'E', 'F'], 4: ['A', 'B', 'G', 'H', 'E', 'F'] };
+
+// Jeder der 24 Versuche: was zu tun ist, wie das Zielfeld aussieht und welcher Weg eingezeichnet wird
+// pfad: 'ziel' = eigener Stock ins Ziel · 'raus' = Zielstock aus dem Feld · 'ablenken' = eigener Stock über den Zielstock ins Ziel
+//       'bringen' = Zielstock ins Ziel
 const VERSUCHE = (() => {
   const v = [];
-  for (let i = 0; i < 6; i++) v.push({ daube: 'M', ziel: 'M', stock: null, wertung: 'ring',
+  for (let i = 0; i < 6; i++) v.push({ durchgang: 1, daube: 'M', ziel: 'M', stock: null, wertung: 'ring', pfad: null,
     text: 'Spiele deinen Stock in die mittleren Ringe – so nah wie möglich an die Daube.' });
-  'ABCDEF'.split('').forEach((b) => v.push({ daube: 'M', ziel: null, stock: b, wertung: 'schuss',
-    text: `Schieße den Zielstock auf Feld ${b} aus dem Zielfeld. Am meisten gibt es, wenn dein eigener Stock im Feld bleibt.` }));
-  for (let i = 0; i < 3; i++) v.push({ daube: 'L', ziel: 'L', stock: null, wertung: 'ring',
+  REIHENFOLGE[2].forEach((b, i) => v.push({ durchgang: 2, daube: 'M', ziel: null, stock: b, wertung: 'schuss', pfad: 'raus',
+    text: `Schieße den Zielstock auf Position ${i + 1} aus dem Zielfeld. Am meisten gibt es, wenn dein eigener Stock im Feld bleibt.` }));
+  for (let i = 0; i < 3; i++) v.push({ durchgang: 3, daube: 'L', ziel: 'L', stock: null, wertung: 'ring', pfad: 'ziel',
     text: 'Spiele deinen Stock in die linken hinteren Ringe – so nah wie möglich an die Daube.' });
-  for (let i = 0; i < 3; i++) v.push({ daube: 'R', ziel: 'R', stock: null, wertung: 'ring',
+  for (let i = 0; i < 3; i++) v.push({ durchgang: 3, daube: 'R', ziel: 'R', stock: null, wertung: 'ring', pfad: 'ziel',
     text: 'Spiele deinen Stock in die rechten hinteren Ringe – so nah wie möglich an die Daube.' });
-  v.push({ daube: 'M', ziel: 'M', stock: 'A', wertung: 'ring', titel: 'Ablenken',
-    text: 'Triff den Zielstock auf A so, dass dein eigener Stock in die mittleren Ringe abgelenkt wird. Gewertet wird dein Stock.' });
-  v.push({ daube: 'M', ziel: 'M', stock: 'B', wertung: 'ring', titel: 'Ablenken',
-    text: 'Triff den Zielstock auf B so, dass dein eigener Stock in die mittleren Ringe abgelenkt wird. Gewertet wird dein Stock.' });
-  v.push({ daube: 'M', ziel: 'M', stock: 'G', wertung: 'ring', titel: 'Bringen',
-    text: 'Bringe den Zielstock von G in die mittleren Ringe. Gewertet wird der Zielstock.' });
-  v.push({ daube: 'M', ziel: 'M', stock: 'H', wertung: 'ring', titel: 'Bringen',
-    text: 'Bringe den Zielstock von H in die mittleren Ringe. Gewertet wird der Zielstock.' });
-  v.push({ daube: 'L', ziel: 'L', stock: 'E', wertung: 'ring', titel: 'Bringen hinten',
-    text: 'Bringe den Zielstock von E in die linken hinteren Ringe. Gewertet wird der Zielstock.' });
-  v.push({ daube: 'R', ziel: 'R', stock: 'F', wertung: 'ring', titel: 'Bringen hinten',
-    text: 'Bringe den Zielstock von F in die rechten hinteren Ringe. Gewertet wird der Zielstock.' });
+  const d4 = (stock, ziel, daube, pfad, titel, text) => v.push({ durchgang: 4, daube, ziel, stock, wertung: 'ring', pfad, titel, text });
+  d4('A', 'M', 'M', 'ablenken', 'Ablenken', 'Triff den Zielstock auf Position 1 so, dass dein eigener Stock in die mittleren Ringe abgelenkt wird. Gewertet wird dein Stock.');
+  d4('B', 'M', 'M', 'ablenken', 'Ablenken', 'Triff den Zielstock auf Position 2 so, dass dein eigener Stock in die mittleren Ringe abgelenkt wird. Gewertet wird dein Stock.');
+  d4('G', 'M', 'M', 'bringen', 'Bringen', 'Bringe den Zielstock von Position 3 in die mittleren Ringe. Gewertet wird der Zielstock.');
+  d4('H', 'M', 'M', 'bringen', 'Bringen', 'Bringe den Zielstock von Position 4 in die mittleren Ringe. Gewertet wird der Zielstock.');
+  d4('E', 'L', 'L', 'bringen', 'Bringen hinten', 'Bringe den Zielstock von Position 5 in die linken hinteren Ringe. Gewertet wird der Zielstock.');
+  d4('F', 'R', 'R', 'bringen', 'Bringen hinten', 'Bringe den Zielstock von Position 6 in die rechten hinteren Ringe. Gewertet wird der Zielstock.');
   return v;
 })();
 
+// Hilfen für die Wege (Maße in cm)
+const START = [150, 662]; // Richtung Abspielstelle, mittig vor dem Feld
+function richtungsPunkt(a, b, abstand, vonB = true) {
+  const dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1;
+  return vonB ? [b[0] - dx / l * abstand, b[1] - dy / l * abstand] : [a[0] + dx / l * abstand, a[1] + dy / l * abstand];
+}
+function rausPunkt(a, z) {
+  // vom Zielstock in Stoßrichtung weiter, bis außerhalb des Feldes
+  const dx = z[0] - a[0], dy = z[1] - a[1];
+  const s = [dx < 0 ? (-32 - z[0]) / dx : dx > 0 ? (332 - z[0]) / dx : Infinity, dy < 0 ? (-32 - z[1]) / dy : Infinity];
+  const k = Math.min(...s);
+  return [z[0] + dx * k, z[1] + dy * k];
+}
+
 let svgNr = 0;
-function zielfeldSvg({ daube = 'M', ziel = null, stock = null, alleStoecke = true } = {}) {
+// o: daube, ziel ('M'|'L'|'R'), stock (Position A–H), durchgang, erledigt (Nummern 1–6 mit Wert), pfad
+function zielfeldSvg(o = {}) {
+  const { daube = 'M', ziel = null, stock = null, durchgang = null, erledigt = [], pfad = null } = o;
+  const gedreht = S.gedreht;
   const id = 'zf' + (++svgNr);
+  const t = ([x, y]) => (gedreht ? [300 - x, 600 - y] : [x, y]);
   const radien = [130, 100, 70, 40, 10];
-  const ringGruppe = (key, clip) => {
-    const [cx, cy] = POS[key];
+  const nummern = REIHENFOLGE[durchgang] || null;
+
+  const ringGruppe = (key) => {
+    const [cx, cy] = t(POS[key]);
     const klasse = ziel ? (ziel === key ? 'aktiv' : 'grau') : '';
-    const kreise = radien.map((r, i) =>
-      `<circle class="ring ${i % 2 ? 'ring-b' : 'ring-a'}" cx="${cx}" cy="${cy}" r="${r}"/>`).join('');
-    // Punktzahlen wie in der Zeichnung entlang der Querachse
-    const richtung = key === 'R' ? -1 : 1;
-    const mitten = [115, 85, 55, 25];
-    const zahlen = [2, 4, 6, 8].map((p, i) => {
-      const x = key === 'M' ? cx - mitten[i] : cx + richtung * mitten[i];
-      return `<text class="zahl" x="${x}" y="${key === 'M' ? cy - 20 : cy - 8}">${p}</text>`;
-    }).join('') + `<text class="zahl" x="${key === 'M' ? cx : cx + richtung * 2}" y="${key === 'M' ? cy - 20 : cy - 13}">10</text>`;
-    return `<g class="${klasse}" ${clip ? `clip-path="url(#${id}-${clip})"` : ''}>${kreise}${zahlen}</g>`;
+    const clip = key === 'M' ? '' : `clip-path="url(#${id}-${cx < 150 ? 'l' : 'r'})"`;
+    const kreise = radien.map((r, i) => `<circle class="ring ${i % 2 ? 'ring-b' : 'ring-a'}" cx="${cx}" cy="${cy}" r="${r}"/>`).join('');
+    // Ringpunkte entlang der Querachse, bei den hinteren Ringen zur Feldmitte hin
+    const innen = key === 'M' ? -1 : (cx < 150 ? 1 : -1);
+    const y = key === 'M' ? cy - 20 : cy - 8;
+    const zahlen = [2, 4, 6, 8].map((p, i) => `<text class="zahl" x="${cx + innen * [115, 85, 55, 25][i]}" y="${y}">${p}</text>`).join('')
+      + `<text class="zahl" x="${key === 'M' ? cx : cx + innen * 2}" y="${key === 'M' ? cy - 20 : cy - 13}">10</text>`;
+    return `<g class="${klasse}" ${clip}>${kreise}${zahlen}</g>`;
   };
-  const stockKreise = (alleStoecke ? 'ABCDEFGH'.split('') : []).filter((b) => b !== stock).map((b) => {
-    const [x, y] = POS[b];
-    return `<circle class="stockkreis" cx="${x}" cy="${y}" r="15"/><text class="stockbuchstabe" x="${x}" y="${y}">${b}</text>`;
-  }).join('');
-  const zielstock = stock ? (() => {
-    const [x, y] = POS[stock];
-    return `<circle class="zielstock" cx="${x}" cy="${y}" r="15"/><text class="zielstock-text" x="${x}" y="${y}">${stock}</text>`;
-  })() : '';
-  const [dx, dy] = POS[daube];
-  return `<svg class="zielfeld" viewBox="-40 -20 380 690" role="img" aria-label="Zielfeld Zielwettbewerb">
+
+  let stoecke = '';
+  for (const b of 'ABCDEFGH') {
+    if (b === stock) continue;
+    const [x, y] = t(POS[b]);
+    const nr = nummern ? nummern.indexOf(b) + 1 : 0;
+    if (nr) {
+      const fertig = erledigt.includes(nr);
+      stoecke += `<g class="stockpos ${fertig ? 'fertig' : ''}"><circle cx="${x}" cy="${y}" r="15"/><text x="${x}" y="${y}">${fertig ? '✓' : nr}</text></g>`;
+    } else {
+      stoecke += `<circle class="stockkreis" cx="${x}" cy="${y}" r="15"/>`;
+    }
+  }
+  let zielstock = '';
+  if (stock) {
+    const [x, y] = t(POS[stock]);
+    const nr = nummern ? nummern.indexOf(stock) + 1 : '';
+    zielstock = `<circle class="zielstock" cx="${x}" cy="${y}" r="15"/><text class="zielstock-text" x="${x}" y="${y}">${nr}</text>`;
+  }
+
+  // Wege: wohin der Stock muss
+  let wege = '';
+  if (pfad) {
+    const linie = (a, b, kl) => {
+      const [x1, y1] = t(a), [x2, y2] = t(b);
+      return `<line class="${kl}" x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" marker-end="url(#${id}-${kl})"/>`;
+    };
+    const Z = stock ? POS[stock] : null;
+    const ZIEL = ziel ? POS[ziel] : null;
+    if (pfad === 'ziel' && ZIEL) wege += linie(START, richtungsPunkt(START, ZIEL, 14), 'weg-eigen');
+    if (Z) {
+      wege += linie(START, richtungsPunkt(START, Z, 19), 'weg-eigen');
+      if (pfad === 'raus') wege += linie(richtungsPunkt(Z, rausPunkt(START, Z), 19, false), rausPunkt(START, Z), 'weg-ziel');
+      if (pfad === 'ablenken') wege += linie(richtungsPunkt(Z, ZIEL, 19, false), richtungsPunkt(Z, ZIEL, 14), 'weg-eigen');
+      if (pfad === 'bringen') wege += linie(richtungsPunkt(Z, ZIEL, 19, false), richtungsPunkt(Z, ZIEL, 14), 'weg-ziel');
+    }
+  }
+
+  const [dx, dy] = t(POS[daube]);
+  // Spielrichtung: Pfeil auf der Seite der Abspielstelle
+  const [ax1, ay1] = t([22, 692]), [ax2, ay2] = t([22, 630]);
+  const textX = gedreht ? ax1 - 12 : ax1 + 12;
+  const textY = (ay1 + ay2) / 2 + 5;
+  const marker = (name, kl) => `<marker id="${id}-${name}" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="4" markerHeight="4" orient="auto-start-reverse"><path class="${kl}" d="M0 0 L10 5 L0 10 z"/></marker>`;
+  return `<svg class="zielfeld" viewBox="${gedreht ? '-40 -100 380 720' : '-40 -20 380 720'}" role="img" aria-label="Zielfeld Zielwettbewerb">
     <defs>
       <clipPath id="${id}-l"><rect x="0" y="0" width="150" height="600"/></clipPath>
       <clipPath id="${id}-r"><rect x="150" y="0" width="150" height="600"/></clipPath>
-      <marker id="${id}-spitze" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse">
-        <path class="pfeilspitze" d="M0 0 L10 5 L0 10 z"/></marker>
+      ${marker('pfeil', 'pfeilspitze')}${marker('weg-eigen', 'spitze-eigen')}${marker('weg-ziel', 'spitze-ziel')}
     </defs>
     <rect class="feldrand" x="0" y="0" width="300" height="600"/>
-    ${ringGruppe('L', 'l')}${ringGruppe('R', 'r')}${ringGruppe('M')}
+    ${ringGruppe('L')}${ringGruppe('R')}${ringGruppe('M')}
     <line class="hilfslinie" x1="150" y1="0" x2="150" y2="600"/>
     <line class="hilfslinie" x1="-20" y1="300" x2="320" y2="300"/>
     <line class="kreuz" x1="132.5" y1="300" x2="167.5" y2="300"/><line class="kreuz" x1="150" y1="282.5" x2="150" y2="317.5"/>
     <rect x="0" y="0" width="300" height="600" fill="none" stroke="#0e2a47" stroke-width="2"/>
-    ${stockKreise}${zielstock}
+    ${stoecke}${wege}${zielstock}
     <circle class="daube" cx="${dx}" cy="${dy}" r="7"/>
-    <line class="pfeil" x1="150" y1="665" x2="150" y2="618" marker-end="url(#${id}-spitze)"/>
-    <text class="richtung" x="225" y="652">Spielrichtung</text>
+    <line class="pfeil" x1="${ax1}" y1="${ay1}" x2="${ax2}" y2="${ay2}" marker-end="url(#${id}-pfeil)"/>
+    <text class="richtung" x="${textX}" y="${textY}" text-anchor="${gedreht ? 'end' : 'start'}">Spielrichtung</text>
   </svg>`;
+}
+
+function feldDrehenKnopf() {
+  return `<div class="feld-werkzeug"><button class="knopf leise" data-a="feld-drehen">⇅ Feld drehen</button></div>`;
+}
+function legende() {
+  return '<p class="legende"><span class="l-eigen"></span>dein Stock <span class="l-ziel"></span>Zielstock</p>';
 }
 
 const summe = (arr) => arr.reduce((a, b) => a + (b ?? 0), 0);
@@ -428,8 +488,8 @@ function renderZiel() {
     <div class="karte anleitung">
       <p>Jeder Schütze spielt <b>4 Durchgänge mit je 6 Versuchen</b>. Pro Versuch gibt es höchstens 10 Punkte, also 60 pro Durchgang und <b>240 insgesamt</b>.</p>
       <p>In die Ringe zählt der <b>innerste Ring, den der Stock berührt</b>: 10 · 8 · 6 · 4 · 2 Punkte, außerhalb 0. Die Linie gehört zum Ring.</p>
-      ${zielfeldSvg({})}
-      <p class="klein" style="text-align:center">Zielfeld 3 × 6 m · Ringe Ø 0,2 / 0,8 / 1,4 / 2,0 / 2,6 m · ● = Daube</p>
+      ${feldDrehenKnopf()}${zielfeldSvg({})}
+      <p class="klein" style="text-align:center">Zielfeld 3 × 6 m · Ringe Ø 0,2 / 0,8 / 1,4 / 2,0 / 2,6 m · ● = Daube · ○ = Zielstock-Positionen</p>
       ${DURCHGAENGE.map((d) => anleitungDurchgang(d)).join('')}
       <p class="klein" style="margin-top:12px">Ein falsch ausgeführter Versuch (z. B. falscher Zielstock) zählt 0 Punkte. Bei Gleichstand entscheidet der 4., dann der 3., dann der 2. Durchgang.
       Grundlage: IFI-Regelbuch (IER), 11. Auflage 2022, Regeln 501–532.</p>
@@ -442,21 +502,22 @@ function renderZiel() {
 function anleitungDurchgang(d) {
   const beispiele = {
     1: [VERSUCHE[0]],
-    2: [VERSUCHE[6]],
+    2: [VERSUCHE[6], VERSUCHE[8]],
     3: [VERSUCHE[12], VERSUCHE[15]],
     4: [VERSUCHE[18], VERSUCHE[20], VERSUCHE[22]]
   }[d.nr];
   const texte = {
     1: '<p>Alle 6 Versuche in die <b>mittleren Ringe</b>. Die Daube liegt auf dem Mittelkreuz.</p>',
-    2: `<p>Auf den Feldern <b>A, B, C, D, E, F</b> (in dieser Reihenfolge) steht je ein Zielstock, der aus dem Zielfeld geschossen wird.</p>
+    2: `<p>Auf den Positionen <b>1 bis 6</b> steht nacheinander je ein Zielstock, der aus dem Zielfeld geschossen wird.</p>
         <ul><li><b>10</b> – ${SCHUSS_TEXT[10]}</li><li><b>5</b> – ${SCHUSS_TEXT[5]}</li><li><b>2</b> – ${SCHUSS_TEXT[2]}</li><li><b>0</b> – ${SCHUSS_TEXT[0]}</li></ul>`,
-    3: '<p>Versuch 1–3 in die <b>linken</b>, Versuch 4–6 in die <b>rechten hinteren Ringe</b>. Die Daube liegt jeweils in der Ringmitte.</p>',
-    4: `<ol><li><b>Ablenken</b> über Zielstock A, dann B: dein eigener Stock soll in die mittleren Ringe – er wird gewertet.</li>
-        <li><b>Bringen</b> von G, dann H: den Zielstock in die mittleren Ringe bringen – der Zielstock wird gewertet.</li>
-        <li><b>Bringen hinten:</b> Zielstock E in die linken, F in die rechten hinteren Ringe.</li></ol>`
+    3: '<p>Versuch 1–3 in die <b>linken</b>, Versuch 4–6 in die <b>rechten hinteren Ringe</b> (links/rechts vom Abspielplatz aus gesehen). Die Daube liegt jeweils in der Ringmitte.</p>',
+    4: `<ol><li><b>Ablenken</b> über Zielstock 1, dann 2: dein eigener Stock soll in die mittleren Ringe – er wird gewertet.</li>
+        <li><b>Bringen</b> von 3, dann 4: den Zielstock in die mittleren Ringe bringen – der Zielstock wird gewertet.</li>
+        <li><b>Bringen hinten:</b> Zielstock 5 in die linken, 6 in die rechten hinteren Ringe.</li></ol>
+        <p class="klein">Die Nummern gelten nur für den jeweiligen Durchgang – im 2. Durchgang stehen die Positionen anders.</p>`
   }[d.nr];
   return `<details><summary>${d.nr}. Durchgang · ${esc(d.name)}</summary>${texte}
-    <div style="display:grid;grid-template-columns:repeat(${beispiele.length},1fr);gap:6px">${beispiele.map((b) => zielfeldSvg(b)).join('')}</div></details>`;
+    <div style="display:grid;grid-template-columns:repeat(${beispiele.length},1fr);gap:6px">${beispiele.map((b) => zielfeldSvg(b)).join('')}</div>${d.nr > 1 ? legende() : ''}</details>`;
 }
 
 function wertungZeile(w) {
@@ -540,7 +601,9 @@ function renderEditor(app) {
           ${aktuell !== null ? '<button class="knopf leise" data-a="ed-leeren">Wert löschen</button>' : ''}
           <button class="knopf leise" data-a="ed-schritt" data-d="1" ${e.cursor === 23 ? 'disabled' : ''}>Weiter ›</button>
         </div>
-        ${zielfeldSvg(v)}
+        ${feldDrehenKnopf()}
+        ${zielfeldSvg({ ...v, erledigt: [1, 2, 3, 4, 5, 6].filter((n) => (dNr - 1) * 6 + n - 1 !== e.cursor && e.punkte[(dNr - 1) * 6 + n - 1] !== null), pfad: aktuell === null ? v.pfad : null })}
+        ${aktuell === null && v.pfad ? legende() : ''}
       </div>
       ${e.id ? '<p style="text-align:center;margin-top:18px"><button class="knopf gefahr" data-a="ed-loeschen">Wertung löschen</button></p>' : ''}
     </main>`;
@@ -774,6 +837,7 @@ const AKTIONEN = {
     if (naechster === -1) toast(`Alle 24 Versuche: ${summe(e.punkte)} Punkte. Jetzt speichern!`);
   },
   'ed-schritt'(b) { S.editor.cursor = Math.min(23, Math.max(0, S.editor.cursor + Number(b.dataset.d))); render(); },
+  'feld-drehen'() { S.gedreht = !S.gedreht; LS.set('tsc88_gedreht', S.gedreht ? '1' : null); render(); },
   'ed-leeren'() { S.editor.punkte[S.editor.cursor] = null; S.editor.geaendert = true; entwurfSichern(); render(); },
   'ed-speichern'() { editorSpeichern(); },
   async 'ed-zurueck'() {
