@@ -166,7 +166,7 @@ main { max-width: 720px; margin: 0 auto; padding: 16px 16px calc(96px + var(--un
 .zielfeld .hilfslinie { stroke: #7f95aa; stroke-width: 1; stroke-dasharray: 8 5; fill: none; }
 .zielfeld .kreuz { stroke: var(--navy); stroke-width: 2.5; }
 .zielfeld .zahl { font-size: 13px; fill: #45596d; font-weight: 600; text-anchor: middle; }
-.zielfeld .stockkreis { fill: #fff; stroke: #7f95aa; stroke-width: 1.2; stroke-dasharray: 4 3; }
+.zielfeld .stockkreis { fill: var(--gruen-hell); stroke: var(--gruen); stroke-width: 1.2; stroke-dasharray: 4 3; }
 .zielfeld .stockbuchstabe { font-size: 14px; fill: #45596d; text-anchor: middle; dominant-baseline: central; font-weight: 700; }
 .zielfeld .zielstock { fill: var(--rot); stroke: var(--rot-dunkel); stroke-width: 2; }
 .zielfeld .zielstock-griff { fill: #fff; }
@@ -292,8 +292,8 @@ main { max-width: 720px; margin: 0 auto; padding: 16px 16px calc(96px + var(--un
 }
 
 /* ---------- Zielfeld: Positionen, Wege, Drehen ---------- */
-.zielfeld .stockpos circle { fill: #fff; stroke: var(--navy-2); stroke-width: 1.8; }
-.zielfeld .stockpos text { fill: var(--navy-2); font-size: 16px; font-weight: 800; text-anchor: middle; dominant-baseline: central; }
+.zielfeld .stockpos circle { fill: var(--gruen-hell); stroke: var(--gruen); stroke-width: 1.8; }
+.zielfeld .stockpos text { fill: var(--gruen); font-size: 16px; font-weight: 800; text-anchor: middle; dominant-baseline: central; }
 .zielfeld .stockpos.fertig { opacity: .4; }
 .zielfeld .weg-eigen { stroke: var(--navy); stroke-width: 3.5; stroke-dasharray: 11 7; stroke-linecap: round; fill: none; }
 .zielfeld .weg-ziel { stroke: var(--rot); stroke-width: 3.5; stroke-dasharray: 11 7; stroke-linecap: round; fill: none; }
@@ -305,3 +305,7 @@ main { max-width: 720px; margin: 0 auto; padding: 16px 16px calc(96px + var(--un
 .legende { display: flex; align-items: center; justify-content: center; gap: 6px; font-size: .82rem; color: var(--text-2); margin: 4px 0 0; }
 .legende span { display: inline-block; width: 22px; height: 0; border-top: 3px dashed var(--navy); margin-left: 8px; }
 .legende span.l-ziel { border-top-color: var(--rot); }
+
+.zielfeld .stockpos.fertig circle { fill: #fff; stroke: #7f95aa; }
+.zielfeld .stockpos.fertig text { fill: #7f95aa; }
+.legende i.l-wartet { display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: var(--gruen-hell); border: 1.8px solid var(--gruen); margin-left: 8px; }

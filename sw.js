@@ -1,7 +1,7 @@
 // Service Worker: hält die App-Dateien für den Start ohne Netz bereit.
 // Daten kommen immer frisch vom Server (werden hier nicht abgefangen).
-const VERSION = 'tsc88-v2';
-const DATEIEN = ['./', 'index.html', 'style.css?v=2', 'app.js?v=2', 'config.js?v=2', 'manifest.webmanifest',
+const VERSION = 'tsc88-v3';
+const DATEIEN = ['./', 'index.html', 'style.css?v=3', 'app.js?v=3', 'config.js?v=3', 'manifest.webmanifest',
   'icons/icon.svg', 'icons/icon-192.png', 'icons/icon-512.png', 'icons/apple-touch-icon.png'];
 
 self.addEventListener('install', (e) => {

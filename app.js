@@ -15,7 +15,7 @@ const S = {
   token: LS.get('tsc88_token'),
   ich: Number(LS.get('tsc88_ich')) || null,
   tab: LS.get('tsc88_tab') || 'training',
-  gedreht: LS.get('tsc88_gedreht') === '1',
+  gedreht: LS.get('tsc88_umgedreht') !== '1', // Standard: Spielrichtung von oben nach unten
   daten: null,
   stand: null,
   offline: false,
@@ -313,7 +313,7 @@ function feldDrehenKnopf() {
   return `<div class="feld-werkzeug"><button class="knopf leise" data-a="feld-drehen">⇅ Feld drehen</button></div>`;
 }
 function legende() {
-  return '<p class="legende"><span class="l-eigen"></span>dein Stock <span class="l-ziel"></span>Zielstock</p>';
+  return '<p class="legende"><span class="l-eigen"></span>dein Stock <span class="l-ziel"></span>Zielstock <i class="l-wartet"></i>wartet</p>';
 }
 
 const summe = (arr) => arr.reduce((a, b) => a + (b ?? 0), 0);
@@ -837,7 +837,7 @@ const AKTIONEN = {
     if (naechster === -1) toast(`Alle 24 Versuche: ${summe(e.punkte)} Punkte. Jetzt speichern!`);
   },
   'ed-schritt'(b) { S.editor.cursor = Math.min(23, Math.max(0, S.editor.cursor + Number(b.dataset.d))); render(); },
-  'feld-drehen'() { S.gedreht = !S.gedreht; LS.set('tsc88_gedreht', S.gedreht ? '1' : null); render(); },
+  'feld-drehen'() { S.gedreht = !S.gedreht; LS.set('tsc88_umgedreht', S.gedreht ? null : '1'); render(); },
   'ed-leeren'() { S.editor.punkte[S.editor.cursor] = null; S.editor.geaendert = true; entwurfSichern(); render(); },
   'ed-speichern'() { editorSpeichern(); },
   async 'ed-zurueck'() {
